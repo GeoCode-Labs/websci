@@ -1,0 +1,56 @@
+services:
+
+  jupyterhub:
+    build:
+      context: jupyterhub
+      dockerfile: Dockerfile-Jupyterhub
+    container_name: jupyterhub
+    hostname: jupyterhub
+    ports:
+      - "8000:8000"
+      - 8081:8081
+    volumes:
+      - ./data/logs:/logs
+      - ./data:/srv/jupyterhub
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/ssl/certe.crt:/ssl/certe.crt:ro
+      - ./data/ssl/key.key:/ssl/key.key:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      - DOCKER_NETWORK_NAME=geocodelab
+    networks:
+      - geocodelab
+    restart: always
+    command:
+      jupyterhub -f /srv/jupyterhub/jupyterhub_config.py
+    labels:
+
+      - "traefik.enable=true"
+      - "traefik.http.routers.jupyterhub.service=jupyterhub"
+      - "traefik.http.services.jupyterhub.loadbalancer.server.port=443"
+      - "traefik.http.services.jupyterhub.loadbalancer.server.scheme=https"
+      - "traefik.http.routers.jupyterhub.rule=Host(`sci.${DNSROOT}`)"
+      - "traefik.http.routers.jupyterhub.tls.certresolver=le"
+      - "traefik.http.routers.jupyterhub.entrypoints=websecure"
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DB}
+    ports:
+      - "27017:27017"
+    networks:
+      - geocodelab
+    volumes:
+      - ./mongo-data:/data/db
+
+  
+networks:
+  geocodelab:
+    external: true
+    name: geocodelab

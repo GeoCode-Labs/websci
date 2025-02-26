@@ -1,0 +1,8 @@
+FROM quay.io/jupyterhub/jupyterhub
+
+RUN pip install \
+    dockerspawner \
+    oauthenticator \
+    pymongo \
+    oauthenticator[google] \
+    loguru
