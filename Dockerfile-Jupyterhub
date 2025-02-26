@@ -4,5 +4,5 @@ RUN pip install \
     dockerspawner \
     oauthenticator \
     pymongo \
-    oauthenticator[google] \
+    python-dotenv \
     loguru
